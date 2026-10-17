@@ -1,0 +1,145 @@
+/* -----------------------------------------------------------------------------
+   index.css — the single global stylesheet for the site.
+   Author: Shuai Ju
+
+   With Tailwind v4, this file does three jobs:
+     1. Pull in Tailwind itself via `@import "tailwindcss"` — that one line
+        provides the reset, the utility engine, and every base utility.
+     2. Register the site's design tokens in a `@theme` block. Each token
+        auto-generates matching utilities:
+          --color-surface  → bg-surface, text-surface, border-surface, ...
+          --radius-lg      → rounded-lg
+          --shadow-md      → shadow-md
+          --font-sans      → font-sans
+          --container-content → max-w-content
+     3. Define a handful of reusable component classes (`.btn`, `.card`, …)
+        using Tailwind's `@apply`, so the JSX doesn't have to repeat the
+        same eight utility classes on every button.
+
+   Old CSS custom properties like `var(--color-accent)` are gone — Tailwind
+   emits an equivalent utility class instead. When a per-component CSS file
+   used to say `background: var(--color-surface)`, the JSX now writes
+   `className="bg-surface"`.
+   ----------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+/* Design tokens. Every `--color-*` / `--radius-*` / `--shadow-*` / `--font-*`
+   / `--container-*` declared here becomes a Tailwind utility automatically.
+   That's the whole "theme" — no separate tailwind.config.ts required. */
+@theme {
+  --color-bg: #ffffff;            /* page background (white) */
+  --color-surface: #fafafa;       /* card backgrounds (warm white) */
+  --color-surface-2: #6ee7b7;     /* mint green*/
+  --color-text: #000000;          /* main text color (black)*/
+  --color-muted: #6b6b6b;         /* secondary/muted text */
+  --color-accent: #6ee7b7;        /* mint green — buttons, links, active nav */
+  --color-accent-strong: #22d3aa; /* darker green — hover states, gradients */
+  --color-danger: #f87171;        /* red — used for errors/validation */
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  /* Radii — override Tailwind's built-in scale for the ones we use. */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  /* One shared shadow. Utility class: `shadow-md`. */
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+  /* System font stack — keeps type crisp across OSes with no download. */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+
+  /* Custom container max-width. Utility class: `max-w-content`. */
+  --container-content: 1120px;
+}
+
+/* Base layer — global element styling. Tailwind ships an opinionated reset;
+   this @layer base adds the site's own defaults on top so headings, links,
+   and body still look like the site instead of a bare Tailwind page. */
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+  a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  img {
+    max-width: 100%;
+    display: block;
+  }
+
+  h1,
+  h2,
+  h3 {
+    line-height: 1.15;
+    margin: 0 0 0.6em;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+  }
+
+  p {
+    margin: 0 0 1em;
+    color: var(--color-muted);
+  }
+}
+
+/* Component layer — hand-named classes for patterns that repeat all over
+   the site. Each is just a bundle of utilities via `@apply`, so we get
+   Tailwind's design consistency without repeating the same 8-class string
+   on every button. Callers just write `className="btn"`. */
+@layer components {
+  .btn {
+  @apply inline-block rounded-md px-5 py-3 font-semibold no-underline cursor-pointer border-0 transition;
+  background: var(--color-accent);
+  color: #fdf8f0;
+}
+
+  .btn:hover {
+    @apply -translate-y-px shadow-md no-underline;
+  }
+
+  .btn-secondary {
+    @apply text-accent border border-accent bg-transparent;
+    background: transparent;
+  }
+
+  .card {
+    @apply bg-surface border border-border rounded-lg p-5 shadow-md;
+  }
+
+  .section-title {
+    @apply text-text mt-0;
+  }
+
+  .lead {
+    @apply text-muted text-[1.05rem] max-w-[68ch];
+  }
+
+  /* Pill-shaped tag used in blog cards, tech-stack lists, project details. */
+  .tag {
+    @apply inline-block px-2 py-0.5 rounded-full bg-surface-2 border border-border text-muted text-xs tracking-wide;
+  }
+}

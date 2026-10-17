@@ -1,0 +1,34 @@
+{
+  "name": "assignment1",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "COMP229(404) Assignment1 — personal portfolio by Shuai Ju.",
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"vite\" \"nodemon ../server.js\"",
+    "demo": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^22.7.4",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^10.0.6",
+    "nodemon": "^3.1.14",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8"
+  }
+}
