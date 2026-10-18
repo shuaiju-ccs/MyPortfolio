@@ -12,7 +12,7 @@ export default defineConfig({
   // emits only the CSS that's actually used. No PostCSS config or content
   // globs to maintain — the plugin handles both. (Tailwind v4.)
   plugins: [react(), tailwindcss()],
-  base: basePath,
+  base: '/MyPortfolio/',
   server: {
     port: 5173,
     open: false
