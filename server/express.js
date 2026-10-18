@@ -8,6 +8,7 @@ import contactRoutes from "./routes/contact.routes.js";
 import projectRoutes from "./routes/project.routes.js";
 import educationRoutes from "./routes/education.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,4 +20,15 @@ app.use("/", contactRoutes);
 app.use("/", projectRoutes);
 app.use("/", educationRoutes);
 app.use("/", userRoutes);
+app.use("/", authRoutes);
+
+app.use((err, req, res, next) => {
+  if (err.name === "UnauthorizedError") {
+    return res.status(401).json({ error: err.name + ": " + err.message });
+  }
+  if (err) {
+    return res.status(400).json({ error: err.name + ": " + err.message });
+  }
+});
+
 export default app;
