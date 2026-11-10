@@ -126,6 +126,19 @@
     background: transparent;
   }
 
+  .btn-small {
+    @apply px-3.5 py-1.5 text-sm;
+  }
+
+  .btn-danger {
+    @apply bg-transparent border border-danger text-danger;
+    background: transparent;
+  }
+
+  .btn:disabled {
+    @apply opacity-60 cursor-not-allowed translate-y-0 shadow-none;
+  }
+
   .card {
     @apply bg-surface border border-border rounded-lg p-5 shadow-md;
   }

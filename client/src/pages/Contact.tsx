@@ -1,22 +1,8 @@
-// -----------------------------------------------------------------------------
-// Contact.tsx — the /contact page and its form.
-// Author: Shuai Ju
-//
-// Concepts introduced here:
-//   • Controlled inputs, one shared onChange handler that branches on
-//     `event.target.type` for the checkbox case.
-//   • Radio group in a <fieldset>/<legend> for accessibility.
-//   • <select> dropdown with a disabled placeholder <option> paired with an
-//     empty string in state.
-//   • Custom validate() function + errors + touched state, with accessible
-//     aria-invalid + aria-describedby wiring.
-//   • Tailwind pattern for form inputs — we hoist the shared 8-class utility
-//     string into a `FIELD_CONTROL` constant so every <input>/<textarea>/
-//     <select> stays consistent without a real CSS class.
-// -----------------------------------------------------------------------------
 import { useState } from 'react';
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiRequest } from '../lib/api';
+import { FORM_ALERT } from '../components/formStyles';
 
 type PreferredContactMethod = 'email' | 'phone' | 'either';
 
@@ -124,7 +110,8 @@ export default function Contact() {
   const [formValues, setFormValues] = useState<ContactFormValues>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState('');
   const navigate = useNavigate();
 
   const handleFieldChange = (
@@ -161,7 +148,7 @@ export default function Contact() {
     setErrors(validate(formValues));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors = validate(formValues);
@@ -175,17 +162,31 @@ export default function Contact() {
       return;
     }
 
-    // eslint-disable-next-line no-console
-    console.log('Contact form submitted:', formValues);
-
+    setIsSubmitting(true);
+    setServerError('');
+    try {
+      await apiRequest('/api/contacts', 'POST', {
+        firstname: formValues.firstName.trim(),
+        lastname: formValues.lastName.trim(),
+        email: formValues.email.trim(),
+        phone: formValues.phone.trim(),
+        message: formValues.message.trim(),
+        preferredContactMethod: formValues.preferredContactMethod,
+        referralSource: formValues.referralSource,
+        subscribeToUpdates: formValues.subscribeToUpdates
+      });
+    } catch (error) {
+      setServerError((error as Error).message);
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
     const submittedFirstName = formValues.firstName;
     const submittedLastName = formValues.lastName;
     setFormValues(EMPTY_FORM);
     setErrors({});
     setTouched({});
 
-    // navigate() with `state` passes data to the next page. Home.tsx reads
-    // it via useLocation().state and renders the "Thanks, ___" banner.
     navigate('/', { state: { justSubmitted: true, firstName: submittedFirstName, lastName: submittedLastName } });
   };
 
@@ -200,7 +201,6 @@ export default function Contact() {
         and I'll get back to you within a couple of business days.
       </p>
 
-      {/* Two-column layout above md; single column below. */}
       <div className="grid gap-5 mt-6 items-start grid-cols-1 md:grid-cols-[1fr_1.4fr]">
         <aside className="card">
           <h2 className="mt-0">Get in touch</h2>
@@ -233,7 +233,12 @@ export default function Contact() {
           noValidate
           className="card grid gap-4"
         >
-          {/* Two fields side by side above md. */}
+          {serverError && (
+            <p role="alert" className={FORM_ALERT}>
+              {serverError}
+            </p>
+          )}
+          
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <label className={FIELD_LABEL}>
               <span>First name</span>
@@ -414,9 +419,6 @@ export default function Contact() {
               aria-describedby={errorFor('message') ? 'message-error' : undefined}
               className={`${FIELD_CONTROL} resize-y`}
             />
-            {/* Character counter. `over-limit` styling folds inline via a
-                conditional class — Tailwind has no ternary of its own,
-                plain JS handles that. */}
             <p
               className={`m-0 mt-0.5 self-end text-right text-xs ${
                 formValues.message.length > MESSAGE_MAX_LENGTH
@@ -437,8 +439,6 @@ export default function Contact() {
             )}
           </label>
 
-          {/* Single checkbox. The label sits after the input because the
-              usual reading order is "☑ Do the thing". */}
           <label className="inline-flex items-start gap-2.5 text-[0.95rem] text-text cursor-pointer">
             <input
               type="checkbox"
@@ -450,8 +450,8 @@ export default function Contact() {
             <span>Subscribe to occasional project updates (no spam).</span>
           </label>
 
-          <button type="submit" className="btn justify-self-start">
-            Send Message
+          <button type="submit" className="btn justify-self-start" disabled={isSubmitting}>
+            {isSubmitting ? 'Sending…' : 'Send Message'}
           </button>
         </form>
       </div>

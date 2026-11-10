@@ -1,22 +1,6 @@
-// -----------------------------------------------------------------------------
-// Navbar.tsx — the sticky top navigation bar.
-// Author: Shuai Ju
-//
-// Concepts introduced here:
-//   • useState — React "hook" for storing values that change over time.
-//   • Link vs NavLink — both navigate without a page reload; NavLink also
-//     tells you whether its `to` matches the current URL (used for the
-//     "active" highlight).
-//   • Rendering a list — arrays get turned into JSX with `.map(...)`.
-//   • The `key` prop — required whenever you render a list; React uses it to
-//     tell items apart between re-renders. Must be unique among siblings.
-//   • Tailwind utility classes — every visual detail (padding, colors,
-//     hover states, responsive behavior) is expressed inline as class names.
-//     The `md:` prefix means "apply from the `md` breakpoint up"; `max-md:`
-//     means "apply below the `md` breakpoint" (i.e. mobile).
-// -----------------------------------------------------------------------------
 import { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 import Logo from './Logo';
 
 type NavLinkItem = {
@@ -34,20 +18,25 @@ const NAV_LINKS: NavLinkItem[] = [
   { to: '/contact', label: 'Contact Me' }
 ];
 
-// The active-link style. Extracted as a constant so both the utility list
-// and the "active" branch below stay readable.
 const NAV_LINK_BASE =
   'px-3.5 py-2 rounded-md font-medium no-underline transition-colors hover:bg-white/5';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  const { user, isAuthenticated, isAdmin, signout } = useAuth();
+  const navigate = useNavigate();
+  const visibleLinks = isAuthenticated
+    ? [...NAV_LINKS, { to: '/messages', label: 'Messages' }]
+    : NAV_LINKS;
+
+  const handleSignout = async () => {
+    closeMobileMenu();
+    await signout();
+    navigate('/');
+  };
 
   return (
-    // The bar is sticky and translucent — a blurred backdrop shows page
-    // scroll behind it. `backdrop-blur` + `bg-bg/75` is Tailwind's way of
-    // spelling "background: rgba(15,18,38,0.75); backdrop-filter: blur"
-    // using the theme color and an opacity modifier.
     <header className="sticky top-0 z-20 backdrop-blur-md bg-bg/75 border-b border-border">
       <div className="relative max-w-content mx-auto px-5 py-3 flex items-center gap-4">
         <Link
@@ -59,9 +48,6 @@ export default function Navbar() {
           <span className="text-[1.05rem]">Shuai Ju</span>
         </Link>
 
-        {/* Hamburger button, shown only on narrow screens (below md).
-            `md:hidden` = visible until md; `flex` layout keeps the 3 bars
-            stacked as a column. */}
         <button
           type="button"
           aria-label="Toggle navigation menu"
@@ -74,8 +60,6 @@ export default function Navbar() {
           <span className="block w-[22px] h-0.5 bg-text rounded-sm" />
         </button>
 
-        {/* The nav is a normal flex row from md up. Below md it's absolutely
-            positioned under the header and toggled by `hidden` vs `flex`. */}
         <nav
           className={[
             'md:ml-auto md:static md:flex md:flex-row md:items-center md:gap-1 md:flex-wrap md:bg-transparent md:border-0 md:p-0',
@@ -83,15 +67,12 @@ export default function Navbar() {
             isMobileMenuOpen ? 'flex' : 'hidden'
           ].join(' ')}
         >
-          {NAV_LINKS.map((link) => (
+          {visibleLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               end={link.end}
               onClick={closeMobileMenu}
-              // NavLink's `className` can be a function receiving
-              // `{ isActive }`. Active links get an accent gradient
-              // background and dark text; inactive links use the muted style.
               className={({ isActive }) =>
                 [
                   NAV_LINK_BASE,
@@ -104,6 +85,43 @@ export default function Navbar() {
               {link.label}
             </NavLink>
           ))}
+          <div className="flex items-center gap-1 md:ml-3 md:pl-3 md:border-l md:border-black/10 max-md:mt-2 max-md:pt-3 max-md:border-t max-md:border-black/10">
+            {isAuthenticated ? (
+              <>
+                <span className="px-2 text-sm text-muted whitespace-nowrap">
+                  {isAdmin ? <span className="tag text-text">admin</span> : user?.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleSignout}
+                  className={`${NAV_LINK_BASE} text-muted hover:text-text bg-transparent border-0 cursor-pointer`}
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLink
+                  to="/signin"
+                  onClick={closeMobileMenu}
+                  className={({ isActive }) =>
+                    [NAV_LINK_BASE, isActive ? 'text-text' : 'text-muted hover:text-text'].join(' ')
+                  }
+                >
+                  Sign In
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  onClick={closeMobileMenu}
+                  className={({ isActive }) =>
+                    [NAV_LINK_BASE, isActive ? 'text-text' : 'text-muted hover:text-text'].join(' ')
+                  }
+                >
+                  Sign Up
+                </NavLink>
+              </>
+            )}
+          </div>
         </nav>
       </div>
     </header>
