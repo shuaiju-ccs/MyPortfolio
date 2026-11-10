@@ -5,9 +5,9 @@ import authCtrl from "../controllers/auth.controller.js";
 const router = express.Router();
 
 router.route("/api/users")
-  .get(userCtrl.list)
+  .get(authCtrl.requireSignin, authCtrl.isAdmin, userCtrl.list)
   .post(userCtrl.create)
-  .delete(authCtrl.requireSignin, userCtrl.removeAll);
+  .delete(authCtrl.requireSignin, authCtrl.isAdmin, userCtrl.removeAll);
 
 router.param("userId", userCtrl.userByID);
 

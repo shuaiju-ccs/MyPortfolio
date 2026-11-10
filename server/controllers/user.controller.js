@@ -10,7 +10,8 @@ const clean = (user) => {
 
 const create = async (req, res) => { 
   try {
-    const user = await new User(req.body).save();
+    const { role, ...fields } = req.body;
+    const user = await new User({ ...fields, role: "user" }).save();
     return res.status(201).json(clean(user));
   } catch (err) {
     return res.status(400).json({ error: errorHandler.getErrorMessage(err) });
@@ -19,7 +20,7 @@ const create = async (req, res) => {
 
 const list = async (req, res) => {
   try {
-    return res.json(await User.find().select("name email updated created"));
+    return res.json(await User.find().select("name email role updated created"));
   } catch (err) {
     return res.status(400).json({ error: errorHandler.getErrorMessage(err) });
   }
@@ -40,7 +41,8 @@ const read = (req, res) => res.json(clean(req.profile));
 
 const update = async (req, res) => {
   try {
-    const user = extend(req.profile, req.body);
+    const { role, ...fields } = req.body;
+    const user = extend(req.profile, fields);
     user.updated = Date.now();
     await user.save();
     return res.json(clean(user));

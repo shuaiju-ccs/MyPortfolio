@@ -9,9 +9,9 @@ const signin = async (req, res) => {
     if (!user) return res.status(401).json({ error: 'User not found' })
     if (!user.authenticate(req.body.password))
       return res.status(401).json({ error: "Email and password don't match." })
-    const token = jwt.sign({ _id: user._id }, config.jwtSecret, { expiresIn: '1h' })
+    const token = jwt.sign({ _id: user._id, role: user.role }, config.jwtSecret, { expiresIn: '1h' })
     res.cookie('t', token, { expire: new Date() + 9999 })
-    return res.json({ token, user: { _id: user._id, name: user.name, email: user.email } })
+    return res.json({ token, user: { _id: user._id, name: user.name, email: user.email, role: user.role } })
   } catch (err) {
     return res.status(401).json({ error: 'Could not sign in' })
   }
@@ -30,4 +30,15 @@ const hasAuthorization = (req, res, next) => {
   next()
 }
 
-export default { signin, signout, requireSignin, hasAuthorization }
+const isAdmin = async (req, res, next) => {
+  try {
+    const me = await User.findById(req.auth._id).select('role')
+    if (!me || me.role !== 'admin')
+      return res.status(403).json({ error: 'Admin role required' })
+    next()
+  } catch (err) {
+    return res.status(403).json({ error: 'Admin role required' })
+  }
+}
+
+export default { signin, signout, requireSignin, hasAuthorization, isAdmin }

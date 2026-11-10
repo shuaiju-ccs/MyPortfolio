@@ -3,10 +3,14 @@ import config from "./config/config.js";
 import app from "./server/express.js";
 import router from "./server/assets-router.js";
 import mongoose from "mongoose";
+import seedAdmin from "./server/seed-admin.js";
 
 mongoose
   .connect(config.mongoUri)
-  .then(() => console.log("Connected to the database!"))
+  .then(async () => {
+       console.log("Connected to the database!");
+       await seedAdmin();
+     })
   .catch((err) => console.error("Database connection failed:", err.message));
 
 app.use("/src", router);
